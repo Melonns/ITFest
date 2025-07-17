@@ -1,0 +1,275 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+export default function DashboardPage() {
+  const [budget, setBudget] = useState(0);
+  const [expenses, setExpenses] = useState([]);
+  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [editAmount, setEditAmount] = useState("");
+  const [category, setCategory] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+
+  const totalSpent = expenses.reduce((acc, cur) => acc + cur.amount, 0);
+  const remaining = budget - totalSpent;
+  const percentUsed = budget > 0 ? (totalSpent / budget) * 100 : 0;
+
+  useEffect(() => {
+    fetchBudget();
+    fetchExpenses();
+  }, []);
+
+  const fetchBudget = async () => {
+    const res = await fetch("/api/budget");
+    const data = await res.json();
+    setBudget(data.budget);
+  };
+
+  const fetchExpenses = async () => {
+    const res = await fetch("/api/expenses");
+    const data = await res.json();
+    setExpenses(data);
+  };
+
+  const handleAddExpense = async () => {
+    if (amount <= 0) return;
+
+    const res = await fetch("/api/expenses", {
+      method: "POST",
+      body: JSON.stringify({
+        amount: parseInt(amount),
+        description,
+      }),
+    });
+
+    if (res.ok) {
+      setAmount(0);
+      setDescription("");
+      fetchExpenses();
+    }
+  };
+
+  const startEdit = (expense) => {
+    setEditingId(expense.id);
+    setEditAmount(expense.amount.toString());
+    setEditDescription(expense.description);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditAmount("");
+    setEditDescription("");
+  };
+
+  const handleSaveEdit = async (id) => {
+    const res = await fetch("/api/expenses", {
+      method: "PATCH",
+      body: JSON.stringify({
+        id,
+        amount: editAmount,
+        description: editDescription,
+      }),
+    });
+
+    if (res.ok) {
+      cancelEdit();
+      fetchExpenses();
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const res = await fetch("/api/expenses", {
+      method: "DELETE",
+      body: JSON.stringify({ id }),
+    });
+
+    if (res.ok) {
+      fetchExpenses();
+    }
+  };
+
+  return (
+    <main className="p-8">
+      <h1 className="text-2xl font-bold">BudgetBuddy Dashboard</h1>
+      <p className="mb-4 text-gray-600">
+        Kelola pengeluaran dan pantau budget Anda
+      </p>
+
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-xl shadow">
+          <h3 className="text-gray-600">Total Budget</h3>
+          <p className="text-xl font-bold text-green-600">
+            IDR {budget.toLocaleString()}
+          </p>
+        </div>
+        <div className="bg-white p-4 rounded-xl shadow">
+          <h3 className="text-gray-600">Total Pengeluaran</h3>
+          <p className="text-xl font-bold text-red-500">
+            IDR {totalSpent.toLocaleString()}
+          </p>
+        </div>
+        <div className="bg-white p-4 rounded-xl-xl shadow-lg">
+          <h3 className="text-gray-600">Sisa Budget</h3>
+          <p
+            className={`text-xl font-bold ${
+              remaining < 0 ? "text-red-500" : "text-green-600"
+            }`}
+          >
+            IDR {remaining.toLocaleString()}
+          </p>
+        </div>
+      </div>
+
+      <div className="mb-4 bg-white p-4 rounded-xl shadow">
+        <h2 className="font-semibold mb-2">Progress Budget</h2>
+        <div className="w-full bg-gray-200 h-4 rounded-xl">
+          <div
+            className="h-4 bg-green-500 rounded-xl"
+            style={{ width: `${percentUsed}%` }}
+          ></div>
+        </div>
+        <p className="text-sm text-right mt-1">
+          {percentUsed.toFixed(1)}% terpakai
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-white p-6 rounded-xl shadow-md">
+          <h3 className="text-lg font-bold text-green-800 mb-4 flex items-center gap-2">
+            <span className="text-xl">➕</span> Tambah Pengeluaran
+          </h3>
+
+          {/* Jumlah + Kategori */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Jumlah (IDR)
+              </label>
+              <div className="flex items-center border rounded-lg px-3 py-2 bg-gray-50">
+                <span className="text-gray-400 mr-2">💲</span>
+                <input
+                  type="number"
+                  className="bg-transparent outline-none w-full"
+                  placeholder="0"
+                  value={amount}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "" || /^[1-9][0-9]*$/.test(val)) {
+                      setAmount(val);
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Kategori</label>
+              <div className="flex items-center border rounded-lg px-3 py-2 bg-gray-50">
+                <span className="text-gray-400 mr-2">🏷️</span>
+                <select
+                  className="bg-transparent outline-none w-full"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                >
+                  <option value="">Pilih kategori</option>
+                  <option value="makanan">Makanan</option>
+                  <option value="transportasi">Transportasi</option>
+                  <option value="hiburan">Hiburan</option>
+                  <option value="lainnya">Lainnya</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Deskripsi */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">
+              Deskripsi (Opsional)
+            </label>
+            <input
+              type="text"
+              className="w-full border rounded-lg px-3 py-2 bg-gray-50"
+              placeholder="Deskripsi pengeluaran"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+
+          {/* Tombol */}
+          <button
+            onClick={handleAddExpense}
+            className="bg-green-300 hover:bg-green-400 text-green-900 font-semibold py-2 w-full rounded-lg flex items-center justify-center gap-2"
+          >
+            <span>➕</span> Tambah Pengeluaran
+          </button>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl shadow">
+          <h3 className="font-bold mb-2">Riwayat Pengeluaran</h3>
+          {expenses.length === 0 ? (
+            <p className="text-gray-500">Belum ada pengeluaran</p>
+          ) : (
+            <ul className="space-y-4">
+              {expenses.map((e) => (
+                <li
+                  key={e.id}
+                  className="bg-gray-50 p-4 rounded-xl shadow-sm flex justify-between items-start"
+                >
+                  {/* Konten Kiri */}
+                  <div>
+                    {/* Label kategori + tanggal */}
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full">
+                        {e.category || "Lainnya"}
+                      </span>
+                      <span className="text-gray-500 text-sm flex items-center gap-1">
+                        📅 {new Date().toLocaleDateString("id-ID")}{" "}
+                        {/* atau e.date kalau ada */}
+                      </span>
+                    </div>
+
+                    {/* Deskripsi */}
+                    <p className="text-sm text-gray-700">
+                      {e.description || "(Tanpa deskripsi)"}
+                    </p>
+
+                    {/* Nominal */}
+                    <p className="text-lg font-bold text-red-500 mt-1">
+                      IDR {e.amount.toLocaleString()}
+                    </p>
+                  </div>
+
+                  {/* Aksi: Edit + Hapus */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => startEdit(e)}
+                      className="text-blue-500 hover:text-blue-700 text-xl"
+                      title="Edit"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => handleDelete(e.id)}
+                      className="text-red-500 hover:text-red-700 text-xl"
+                      title="Hapus"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </li>
+              ))}
+              <div className="border-t pt-2 mt-4 flex justify-between font-semibold">
+                <span>Total Pengeluaran:</span>
+                <span className="text-red-600">
+                  IDR {totalSpent.toLocaleString()}
+                </span>
+              </div>
+            </ul>
+          )}
+        </div>
+      </div>
+    </main>
+  );
+}

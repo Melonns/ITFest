@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
 
 export default function DashboardPage() {
   const [budget, setBudget] = useState(0);
@@ -41,13 +42,24 @@ export default function DashboardPage() {
       body: JSON.stringify({
         amount: parseInt(amount),
         description,
+        category,
       }),
     });
 
     if (res.ok) {
       setAmount(0);
       setDescription("");
+      setCategory("");
       fetchExpenses();
+
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        text: "Pengeluaran telah ditambahkan",
+        confirmButtonColor: "#22c55e",
+        timer: 2000,
+        showConfirmButton: true,
+      });
     }
   };
 
@@ -76,6 +88,14 @@ export default function DashboardPage() {
     if (res.ok) {
       cancelEdit();
       fetchExpenses();
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        text: "Pembaruan Berhasil Dilakukan",
+        confirmButtonColor: "#22c55e",
+        timer: 2000,
+        showConfirmButton: true,
+      });
     }
   };
 
@@ -87,12 +107,32 @@ export default function DashboardPage() {
 
     if (res.ok) {
       fetchExpenses();
+
+      Swal.fire({
+        icon: "delete",
+        title: "Berhasil!",
+        text: "Riwayat Berhasil Dihapus",
+        confirmButtonColor: "#22c55e",
+        timer: 2000,
+        showConfirmButton: true,
+      });
+    }
+  };
+
+  const getBudgetStatus = () => {
+    const percentLeft = (remaining / budget) * 100;
+    if (percentLeft > 30) {
+      return { label: "Aman", color: "bg-gray-200 text-gray-800" };
+    } else if (percentLeft > 10) {
+      return { label: "Waspada", color: "bg-yellow-200 text-yellow-800" };
+    } else {
+      return { label: "Kritis", color: "bg-red-200 text-red-800" };
     }
   };
 
   return (
     <main className="p-8">
-      <h1 className="text-2xl font-bold">BudgetBuddy Dashboard</h1>
+      <h1 className="text-3xl font-bold">BudgetBuddy Dashboard</h1>
       <p className="mb-4 text-gray-600">
         Kelola pengeluaran dan pantau budget Anda
       </p>
@@ -110,7 +150,7 @@ export default function DashboardPage() {
             IDR {totalSpent.toLocaleString()}
           </p>
         </div>
-        <div className="bg-white p-4 rounded-xl-xl shadow-lg">
+        <div className="bg-white p-4 rounded-xl shadow-lg">
           <h3 className="text-gray-600">Sisa Budget</h3>
           <p
             className={`text-xl font-bold ${
@@ -119,15 +159,22 @@ export default function DashboardPage() {
           >
             IDR {remaining.toLocaleString()}
           </p>
+          <div
+            className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-medium ${
+              getBudgetStatus().color
+            }`}
+          >
+            {getBudgetStatus().label}
+          </div>
         </div>
       </div>
 
       <div className="mb-4 bg-white p-4 rounded-xl shadow">
-        <h2 className="font-semibold mb-2">Progress Budget</h2>
-        <div className="w-full bg-gray-200 h-4 rounded-xl">
+        <h1 className="font-semibold mb-2">Progress Budget</h1>
+        <div className="w-full bg-gray-200 h-4 rounded-xl overflow-hidden">
           <div
-            className="h-4 bg-green-500 rounded-xl"
-            style={{ width: `${percentUsed}%` }}
+            className="h-4 bg-green-500 rounded-xl transition-all duration-300"
+            style={{ width: `${Math.min(percentUsed, 100)}%` }} // ⬅️ dibatasi 100%
           ></div>
         </div>
         <p className="text-sm text-right mt-1">
@@ -217,55 +264,80 @@ export default function DashboardPage() {
                   key={e.id}
                   className="bg-gray-50 p-4 rounded-xl shadow-sm flex justify-between items-start"
                 >
-                  {/* Konten Kiri */}
-                  <div>
-                    {/* Label kategori + tanggal */}
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full">
-                        {e.category || "Lainnya"}
-                      </span>
-                      <span className="text-gray-500 text-sm flex items-center gap-1">
-                        📅 {new Date().toLocaleDateString("id-ID")}{" "}
-                        {/* atau e.date kalau ada */}
-                      </span>
+                  {editingId === e.id ? (
+                    // MODE EDIT
+                    <div className="w-full">
+                      <div className="grid grid-cols-2 gap-4 mb-2">
+                        <input
+                          type="number"
+                          className="border rounded px-3 py-1 w-full"
+                          value={editAmount}
+                          onChange={(e) => setEditAmount(e.target.value)}
+                          placeholder="Jumlah baru"
+                        />
+                        <input
+                          type="text"
+                          className="border rounded px-3 py-1 w-full"
+                          value={editDescription}
+                          onChange={(e) => setEditDescription(e.target.value)}
+                          placeholder="Deskripsi baru"
+                        />
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => handleSaveEdit(e.id)}
+                          className="text-sm text-green-600 hover:text-green-800"
+                        >
+                          Simpan
+                        </button>
+                        <button
+                          onClick={cancelEdit}
+                          className="text-sm text-gray-600 hover:text-gray-800"
+                        >
+                          Batal
+                        </button>
+                      </div>
                     </div>
+                  ) : (
+                    // MODE BACA (NORMAL)
+                    <>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="capitalize bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full">
+                            {e.category || "Lainnya"}
+                          </span>
+                          <span className="text-gray-500 text-sm flex items-center gap-1">
+                            📅 {new Date().toLocaleDateString("id-ID")}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-700">
+                          {e.description || "(Tanpa deskripsi)"}
+                        </p>
+                        <p className="text-lg font-bold text-red-500 mt-1">
+                          IDR {e.amount.toLocaleString()}
+                        </p>
+                      </div>
 
-                    {/* Deskripsi */}
-                    <p className="text-sm text-gray-700">
-                      {e.description || "(Tanpa deskripsi)"}
-                    </p>
-
-                    {/* Nominal */}
-                    <p className="text-lg font-bold text-red-500 mt-1">
-                      IDR {e.amount.toLocaleString()}
-                    </p>
-                  </div>
-
-                  {/* Aksi: Edit + Hapus */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => startEdit(e)}
-                      className="text-blue-500 hover:text-blue-700 text-xl"
-                      title="Edit"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      onClick={() => handleDelete(e.id)}
-                      className="text-red-500 hover:text-red-700 text-xl"
-                      title="Hapus"
-                    >
-                      🗑️
-                    </button>
-                  </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => startEdit(e)}
+                          className="text-blue-500 hover:text-blue-700 text-xl"
+                          title="Edit"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={() => handleDelete(e.id)}
+                          className="text-red-500 hover:text-red-700 text-xl"
+                          title="Hapus"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </li>
               ))}
-              <div className="border-t pt-2 mt-4 flex justify-between font-semibold">
-                <span>Total Pengeluaran:</span>
-                <span className="text-red-600">
-                  IDR {totalSpent.toLocaleString()}
-                </span>
-              </div>
             </ul>
           )}
         </div>

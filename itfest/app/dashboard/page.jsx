@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 
@@ -12,6 +13,7 @@ export default function DashboardPage() {
   const [editAmount, setEditAmount] = useState("");
   const [category, setCategory] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editCategory, setEditCategory] = useState("");
 
   const totalSpent = expenses.reduce((acc, cur) => acc + cur.amount, 0);
   const remaining = budget - totalSpent;
@@ -35,6 +37,7 @@ export default function DashboardPage() {
   };
 
   const handleAddExpense = async () => {
+    if (!amount || !category) return;
     if (amount <= 0) return;
 
     const res = await fetch("/api/expenses", {
@@ -67,6 +70,7 @@ export default function DashboardPage() {
     setEditingId(expense.id);
     setEditAmount(expense.amount.toString());
     setEditDescription(expense.description);
+    setEditCategory(expense.category || "");
   };
 
   const cancelEdit = () => {
@@ -82,6 +86,7 @@ export default function DashboardPage() {
         id,
         amount: editAmount,
         description: editDescription,
+        category: editCategory,
       }),
     });
 
@@ -109,7 +114,7 @@ export default function DashboardPage() {
       fetchExpenses();
 
       Swal.fire({
-        icon: "delete",
+        icon: "success",
         title: "Berhasil!",
         text: "Riwayat Berhasil Dihapus",
         confirmButtonColor: "#22c55e",
@@ -132,10 +137,28 @@ export default function DashboardPage() {
 
   return (
     <main className="p-8">
-      <h1 className="text-3xl font-bold">BudgetBuddy Dashboard</h1>
+      {/* <h1 className="text-3xl font-bold">BudgetBuddy Dashboard</h1>
       <p className="mb-4 text-gray-600">
         Kelola pengeluaran dan pantau budget Anda
-      </p>
+      </p> */}
+
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-green-600">
+            BudgetBuddy Dashboard
+          </h1>
+          <p className="text-gray-600">
+            Kelola pengeluaran dan pantau budget Anda
+          </p>
+        </div>
+
+        {/* Tombol Profil */}
+        <Link href="/profile">
+          <button className="inline-flex items-center justify-center w-10 h-10 rounded-md text-gray-600 hover:bg-gray-100 transition-colors">
+            <span className="text-lg">👤</span>
+          </button>
+        </Link>
+      </div>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-white p-4 rounded-xl shadow">
@@ -171,15 +194,16 @@ export default function DashboardPage() {
 
       <div className="mb-4 bg-white p-4 rounded-xl shadow">
         <h1 className="font-semibold mb-2">Progress Budget</h1>
-        <div className="w-full bg-gray-200 h-4 rounded-xl overflow-hidden">
+        <p className="text-sm text-right mt-1 mb-3">
+          {percentUsed.toFixed(1)}% terpakai
+        </p>
+        <div className="w-full bg-gray-200 h-6 rounded-xl overflow-hidden">
           <div
             className="h-4 bg-green-500 rounded-xl transition-all duration-300"
             style={{ width: `${Math.min(percentUsed, 100)}%` }} // ⬅️ dibatasi 100%
           ></div>
         </div>
-        <p className="text-sm text-right mt-1">
-          {percentUsed.toFixed(1)}% terpakai
-        </p>
+        <p className="text-sm mt-2 text-right">IDR {budget.toLocaleString()}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -216,7 +240,7 @@ export default function DashboardPage() {
               <div className="flex items-center border rounded-lg px-3 py-2 bg-gray-50">
                 <span className="text-gray-400 mr-2">🏷️</span>
                 <select
-                  className="bg-transparent outline-none w-full"
+                  className="px-3 py-1 w-full"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                 >
@@ -247,7 +271,12 @@ export default function DashboardPage() {
           {/* Tombol */}
           <button
             onClick={handleAddExpense}
-            className="bg-green-300 hover:bg-green-400 text-green-900 font-semibold py-2 w-full rounded-lg flex items-center justify-center gap-2"
+            disabled={!amount || !category}
+            className={`py-2 w-full rounded-lg flex items-center justify-center gap-2 font-semibold ${
+              !amount || !category
+                ? "bg-gray-300 text-gray-400 cursor-not-allowed"
+                : "bg-green-300 hover:bg-green-400 text-green-900"
+            }`}
           >
             <span>➕</span> Tambah Pengeluaran
           </button>
@@ -256,7 +285,16 @@ export default function DashboardPage() {
         <div className="bg-white p-4 rounded-xl shadow">
           <h3 className="font-bold mb-2">Riwayat Pengeluaran</h3>
           {expenses.length === 0 ? (
-            <p className="text-gray-500">Belum ada pengeluaran</p>
+            <div className="flex flex-col items-center justify-center text-center text-gray-500 py-10">
+              <div className="text-4xl mb-2">💸</div>{" "}
+              {/* Bisa pakai icon SVG juga */}
+              <p className="text-lg font-semibold text-gray-700 mb-1">
+                Belum ada pengeluaran
+              </p>
+              <p className="text-sm text-gray-500">
+                Tambahkan pengeluaran pertama Anda di form sebelah kiri
+              </p>
+            </div>
           ) : (
             <ul className="space-y-4">
               {expenses.map((e) => (
@@ -338,6 +376,12 @@ export default function DashboardPage() {
                   )}
                 </li>
               ))}
+              <div className="border-t pt-2 mt-8 flex justify-between font-semibold">
+                <span className="mt-3">Total Pengeluaran:</span>
+                <span className="mt-3 text-red-600">
+                  IDR {totalSpent.toLocaleString()}
+                </span>
+              </div>
             </ul>
           )}
         </div>

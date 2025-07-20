@@ -49,7 +49,7 @@ export default function BenefitSection() {
   };
 
   return (
-    <section className="bg-white text-black p-8 md:p-16 mb-8 md:mb-16">
+    <section id="benefits" className="bg-white text-black p-8 md:p-16 mb-8 md:mb-16">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
         {/* Left Card Section with Carousel Controls */}
         <div className="lg:w-1/2 relative flex flex-col items-center px-8 md:px-0">

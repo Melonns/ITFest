@@ -130,7 +130,7 @@ export default function Home() {
   };
 
   return (
-    <div className="bg-white">
+    <div id="hero" className="bg-white">
       {/* Hero Section */}
       <main className="container mx-auto px-4 md:px-8 pt-32 md:pt-40 pb-20 md:pb-32">
         <motion.div

@@ -11,18 +11,35 @@ export default function NavbarLanding() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [user, setUser] = useState(null);
+  const [activeSection, setActiveSection] = useState('hero');
   
   const navItems = [
-    { name: "Home", href: "/" },
-    { name: "Menu", href: "/menu" },
-    { name: "Subscription", href: "/subscription" },
-    { name: "Contact Us", href: "/contact" },
+    { name: "Home", href: "#hero", sectionId: "hero" },
+    { name: "How It Works", href: "#benefits", sectionId: "benefits" },
+    { name: "Features", href: "#features", sectionId: "features" },
+    { name: "Testimonials", href: "#testimonials", sectionId: "testimonials" },
+    { name: "FAQ", href: "#faq", sectionId: "faq" },
   ];
 
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       setIsScrolled(scrollTop > 0);
+
+      // Update active section based on scroll position
+      const sections = navItems.map(item => item.sectionId);
+      let current = 'hero';
+      
+      for (const sectionId of sections) {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          if (rect.top <= 100 && rect.bottom >= 100) {
+            current = sectionId;
+          }
+        }
+      }
+      setActiveSection(current);
     };
 
     // Set loaded state after component mounts with small delay for smoother effect
@@ -124,6 +141,21 @@ export default function NavbarLanding() {
     }),
   };
 
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const headerHeight = 80; // Adjust based on your navbar height
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+    closeMenu();
+  };
+
   return (
     <motion.header
       initial="hidden"
@@ -147,9 +179,10 @@ export default function NavbarLanding() {
         >
           <Link 
             href="/"
-            className="text-2xl md:text-3xl font-bold text-gray-800 font-montserrat hover:text-green-600 transition-colors duration-300 ease-out"
+            className="text-2xl md:text-3xl font-bold text-gray-800 font-montserrat hover:text-green-600 transition-colors duration-300 ease-out antialiased"
+            style={{ textRendering: 'optimizeLegibility' }}
           >
-            SEA Catering
+            BudgetBuddy
           </Link>
         </motion.div>
 
@@ -162,7 +195,7 @@ export default function NavbarLanding() {
             duration: 0.8,
             ease: [0.25, 0.1, 0.25, 1]
           }}
-          className="hidden md:flex gap-6 text-base font-sans"
+          className="hidden md:flex gap-6 text-base font-sans antialiased"
         >
           {navItems.map((item, index) => (
             <motion.div
@@ -175,14 +208,15 @@ export default function NavbarLanding() {
                 ease: [0.25, 0.1, 0.25, 1]
               }}
             >
-              <Link
-                href={item.href}
+              <button
+                onClick={() => scrollToSection(item.sectionId)}
                 className={`${
-                  (pathname === item.href || (item.href === "/" && pathname === "/")) ? "text-green-600 font-semibold" : "text-gray-600 hover:text-green-600"
-                } transition-colors duration-300 ease-out font-sans`}
+                  activeSection === item.sectionId ? "text-green-600 font-semibold" : "text-gray-600 hover:text-green-600"
+                } transition-colors duration-300 ease-out font-sans antialiased`}
+                style={{ textRendering: 'optimizeLegibility' }}
               >
                 {item.name}
-              </Link>
+              </button>
             </motion.div>
           ))}
         </motion.nav>
@@ -201,18 +235,24 @@ export default function NavbarLanding() {
           {user ? (
             <Link
               href={user.role === 'admin' ? '/dashboard/admin' : '/dashboard/user'}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg text-base hover:bg-green-700 transition-all duration-300 ease-out font-sans transform hover:scale-105"
+              className="bg-green-600 text-white px-4 py-2 rounded-lg text-base hover:bg-green-700 transition-all duration-300 ease-out font-sans transform hover:scale-105 antialiased"
+              style={{ textRendering: 'optimizeLegibility' }}
             >
               Dashboard
             </Link>
           ) : (
             <>
-              <Link href="/auth/login" className="text-gray-600 hover:text-green-600 text-base transition-colors duration-300 ease-out font-sans">
+              <Link 
+                href="/auth/login" 
+                className="text-gray-600 hover:text-green-600 text-base transition-colors duration-300 ease-out font-sans antialiased"
+                style={{ textRendering: 'optimizeLegibility' }}
+              >
                 Login
               </Link>
               <Link
                 href="/auth/register"
-                className="bg-green-600 text-white px-4 py-2 rounded-lg text-base hover:bg-green-700 transition-all duration-300 ease-out font-sans transform hover:scale-105"
+                className="bg-green-600 text-white px-4 py-2 rounded-lg text-base hover:bg-green-700 transition-all duration-300 ease-out font-sans transform hover:scale-105 antialiased"
+                style={{ textRendering: 'optimizeLegibility' }}
               >
                 Get Started
               </Link>
@@ -265,17 +305,17 @@ export default function NavbarLanding() {
                     animate="visible"
                     variants={menuItemVariants}
                   >
-                    <Link
-                      href={item.href}
-                      onClick={closeMenu}
-                      className={`block py-3 px-4 rounded-lg transition-all duration-300 ease-out font-sans ${
-                        (pathname === item.href || (item.href === "/" && pathname === "/")) 
+                    <button
+                      onClick={() => scrollToSection(item.sectionId)}
+                      className={`block w-full text-left py-3 px-4 rounded-lg transition-all duration-300 ease-out font-sans antialiased ${
+                        activeSection === item.sectionId
                           ? "text-green-600 font-semibold bg-white/30 transform scale-105" 
                           : "text-gray-700 hover:text-green-600 hover:bg-white/20 hover:transform hover:scale-105"
                       }`}
+                      style={{ textRendering: 'optimizeLegibility' }}
                     >
                       {item.name}
-                    </Link>
+                    </button>
                   </motion.div>
                 ))}
               </nav>
@@ -295,7 +335,8 @@ export default function NavbarLanding() {
                   <Link
                     href={user.role === 'admin' ? '/dashboard/admin' : '/dashboard/user'}
                     onClick={closeMenu}
-                    className="block bg-green-600/90 text-white px-4 py-3 rounded-lg text-center hover:bg-green-700/90 transition-all duration-300 ease-out font-sans backdrop-blur-sm transform hover:scale-105"
+                    className="block bg-green-600/90 text-white px-4 py-3 rounded-lg text-center hover:bg-green-700/90 transition-all duration-300 ease-out font-sans backdrop-blur-sm transform hover:scale-105 antialiased"
+                    style={{ textRendering: 'optimizeLegibility' }}
                   >
                     Dashboard
                   </Link>
@@ -304,14 +345,16 @@ export default function NavbarLanding() {
                     <Link 
                       href="/auth/login" 
                       onClick={closeMenu}
-                      className="block py-3 px-4 text-gray-700 hover:text-green-600 hover:bg-white/20 rounded-lg transition-all duration-300 ease-out font-sans hover:transform hover:scale-105"
+                      className="block py-3 px-4 text-gray-700 hover:text-green-600 hover:bg-white/20 rounded-lg transition-all duration-300 ease-out font-sans hover:transform hover:scale-105 antialiased"
+                      style={{ textRendering: 'optimizeLegibility' }}
                     >
                       Login
                     </Link>
                     <Link
                       href="/auth/register"
                       onClick={closeMenu}
-                      className="block bg-green-600/90 text-white px-4 py-3 rounded-lg text-center hover:bg-green-700/90 transition-all duration-300 ease-out font-sans backdrop-blur-sm transform hover:scale-105"
+                      className="block bg-green-600/90 text-white px-4 py-3 rounded-lg text-center hover:bg-green-700/90 transition-all duration-300 ease-out font-sans backdrop-blur-sm transform hover:scale-105 antialiased"
+                      style={{ textRendering: 'optimizeLegibility' }}
                     >
                       Get Started
                     </Link>

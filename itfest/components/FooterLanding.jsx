@@ -2,6 +2,20 @@ import Link from "next/link"
 import { Facebook, Plus, Instagram, Youtube, MessageCircle, Send, Phone, User } from "lucide-react"
 
 export default function FooterLanding() {
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const headerHeight = 80;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
     <footer className="bg-white text-gray-700 border-t border-gray-200/20 shadow-sm px-6 py-10">
       <div className="max-w-6xl mx-auto">
@@ -11,24 +25,29 @@ export default function FooterLanding() {
             <h3 className="font-semibold text-gray-900 mb-4">Navigation</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/" className="hover:text-green-600 transition-colors">
+                <button onClick={() => scrollToSection('hero')} className="hover:text-green-600 transition-colors">
                   Home
-                </Link>
+                </button>
               </li>
               <li>
-                <Link href="/menu" className="hover:text-green-600 transition-colors">
-                  Menu
-                </Link>
+                <button onClick={() => scrollToSection('benefits')} className="hover:text-green-600 transition-colors">
+                  How It Works
+                </button>
               </li>
               <li>
-                <Link href="/subscription" className="hover:text-green-600 transition-colors">
-                  Subscription
-                </Link>
+                <button onClick={() => scrollToSection('features')} className="hover:text-green-600 transition-colors">
+                  Features
+                </button>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-green-600 transition-colors">
-                  Contact Us
-                </Link>
+                <button onClick={() => scrollToSection('testimonials')} className="hover:text-green-600 transition-colors">
+                  Testimonials
+                </button>
+              </li>
+              <li>
+                <button onClick={() => scrollToSection('faq')} className="hover:text-green-600 transition-colors">
+                  FAQ
+                </button>
               </li>
             </ul>
           </div>
@@ -93,13 +112,13 @@ export default function FooterLanding() {
         <div className="flex flex-col space-y-4 pt-8 border-t border-gray-200/20">
           <div className="flex flex-col md:flex-row items-center">
             <div className="mb-4 md:mb-0">
-              <h2 className="text-2xl font-bold text-gray-900">SEA Catering</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Budget Buddy</h2>
             </div>
           </div>
 
           {/* Watermark */}
           <div className="text-center text-xs text-gray-400 border-t border-gray-200/20 pt-4">
-            <p>Aditya Wirayudha - Universitas Brawijaya © 2025</p>
+            <p>Universitas Brawijaya © 2025</p>
           </div>
         </div>
       </div>

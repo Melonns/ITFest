@@ -74,6 +74,7 @@ export default function CateringBenefits() {
   return (
     <motion.section 
       ref={ref}
+      id="features"
       className="py-16 md:py-20 mt-8 md:mt-16 bg-green-600 text-center"
     >
       <div className="container mx-auto px-4 md:px-8 py-8 md:py-12">

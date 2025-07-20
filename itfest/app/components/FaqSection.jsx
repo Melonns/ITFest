@@ -38,7 +38,7 @@ export default function FaqSection() {
     };
 
     return (
-        <section className="pt-12 pb-20 md:pt-16 md:pb-24 bg-white text-center">
+        <section id="faq" className="pt-12 pb-20 md:pt-16 md:pb-24 bg-white text-center">
             <div className="container mx-auto px-4 md:px-8">
                 <div className="max-w-5xl mx-auto mb-12 md:mb-16">
                     <h2 className="text-3xl md:text-4xl font-semibold text-green-600 leading-tight font-montserrat mb-6">
